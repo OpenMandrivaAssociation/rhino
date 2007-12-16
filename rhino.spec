@@ -34,7 +34,7 @@
 
 Name:           rhino
 Version:        1.6
-Release:        %mkrel 0.r5.4
+Release:        %mkrel 0.r5.5
 Epoch:          0
 Summary:        JavaScript for Java
 License:        MPL
@@ -48,6 +48,7 @@ Group:          Development/Java
 #Vendor:         JPackage Project
 #Distribution:   JPackage
 #Requires:       xmlbeans
+BuildRequires:  java-rpmbuild
 BuildRequires:  ant
 #BuildRequires:  xmlbeans
 %if %{gcj_support}
