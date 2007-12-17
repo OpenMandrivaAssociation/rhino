@@ -57,7 +57,6 @@ BuildRequires:   java-gcj-compat-devel
 BuildArch:       noarch
 BuildRequires:   java-devel >= 0:1.4.2 
 %endif
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 Rhino is an open-source implementation of JavaScript written entirely
