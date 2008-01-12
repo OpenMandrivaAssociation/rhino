@@ -28,21 +28,22 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-%define cvs_version 1_6R5
+%define cvs_version 1_7R1
+%define archive_version 1_7R1-RC1
 %define section     free
 %define gcj_support 1
 
 Name:           rhino
-Version:        1.6
-Release:        %mkrel 0.r5.5
+Version:        1.7
+Release:        %mkrel 0.0.1
 Epoch:          0
 Summary:        JavaScript for Java
 License:        MPL
-Source0:        ftp://ftp.mozilla.org/pub/mozilla.org/js/rhino%{cvs_version}.zip
+Source0:        ftp://ftp.mozilla.org/pub/mozilla.org/js/rhino%{archive_version}.zip
 Source1:        http://java.sun.com/products/jfc/tsc/articles/treetable2/downloads/src.zip
-Source2:	%{name}.script
-Patch0:		http://svn.dojotoolkit.org/dojo/trunk/buildscripts/lib/custom_rhino.diff
-Patch1:		rhino-no-xmlbeans.patch
+Source2:        %{name}.script
+Patch0:                http://svn.dojotoolkit.org/dojo/trunk/buildscripts/lib/custom_rhino.diff
+Patch1:                rhino-no-xmlbeans.patch
 URL:            http://www.mozilla.org/rhino/
 Group:          Development/Java
 #Vendor:         JPackage Project
@@ -94,25 +95,27 @@ Javadoc for %{name}.
 %setup -q -n %{name}%{cvs_version}
 %patch0 -p1
 %patch1 -p1
+
 # Fix build
-%{__perl} -pi -e 's|^xbean\.jar:.*||' build.properties
-%{__perl} -pi -e 's|.*<get.*src=.*>\n||' toolsrc/org/mozilla/javascript/tools/debugger/build.xml xmlimplsrc/build.xml
+%{__perl} -pi -e 's|.*<get.*src=.*>\n||' build.xml testsrc/build.xml toolsrc/org/mozilla/javascript/tools/debugger/build.xml xmlimplsrc/build.xml
 %{__install} -D -p -m 644 %{SOURCE1} toolsrc/org/mozilla/javascript/tools/debugger/downloaded/swingExSrc.zip
-# Fix path between manual and javadocs
-%{__perl} -pi -e 's|"apidocs/index.html"|"%{_javadocdir}/%{name}-%{version}/index.html"|' docs/doc.html
+
 # Fix manifest
 %{__perl} -pi -e 's|^Class-Path:.*\n||g' src/manifest
+
 # Add jpp release info to version
-%{__perl} -pi -e 's|^implementation.version: Rhino .* release .* \${implementation.date}|\
-implementation.version: Rhino %{version} release %{release} \${implementation.date}|' build.properties
+%{__perl} -pi -e 's|^implementation.version: Rhino .* release .* \${implementation.date}|implementation.version: Rhino %{version} release %{release} \${implementation.date}|' build.properties
 
 %build
-#%ant -Dxbean.jar=$(build-classpath xmlbeans/xbean) jar javadoc
-%ant -Dxbean.jar= -Dxmlimplsrc-build-file= jar javadoc
+export CLASSPATH=
+export OPT_JAR_LIST=:
+#%%{ant} -Dxbean.jar=$(build-classpath xmlbeans/xbean) jar javadoc
+%{ant} -Dxbean.jar= -Djsr173.jar= -Dxmlimplsrc-build-file= jar javadoc
 
 pushd examples
-export CLASSPATH=../build/%{name}%{cvs_version}/js.jar:$(build-classpath xmlbeans/xbean)
+export CLASSPATH=../build/%{name}%{cvs_version}/js.jar:$(build-classpath xmlbeans/xbean 2>/dev/null)
 %{javac} *.java
+%{jar} cvf ../build/%{name}%{cvs_version}/%{name}-examples-%{version}.jar *.class
 popd
 
 %install
@@ -121,14 +124,15 @@ popd
 # jars
 %{__mkdir_p} %{buildroot}%{_javadir}
 %{__cp} -a build/%{name}%{cvs_version}/js.jar %{buildroot}%{_javadir}/%{name}-%{version}.jar
+%{__cp} -a build/%{name}%{cvs_version}/%{name}-examples-%{version}.jar %{buildroot}%{_javadir}/%{name}-examples-%{version}.jar
 (cd %{buildroot}%{_javadir} && %{__ln_s} %{name}-%{version}.jar js-%{version}.jar)
-(cd %{buildroot}%{_javadir} && for jar in *-%{version}*; do %{__ln_s} ${jar} `echo $jar| sed "s|-%{version}||g"`; done)
+(cd %{buildroot}%{_javadir} && for jar in *-%{version}*; do %{__ln_s} ${jar} `echo $jar| %{__sed} "s|-%{version}||g"`; done)
 
 # javadoc
 %{__mkdir_p} %{buildroot}%{_javadocdir}/%{name}-%{version}
-%{__cp} -a build/%{name}%{cvs_version}/docs/apidocs/* %{buildroot}%{_javadocdir}/%{name}-%{version}
+%{__cp} -a build/%{name}%{cvs_version}/javadoc/* %{buildroot}%{_javadocdir}/%{name}-%{version}
+%{__ln_s} %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
 %{_bindir}/find %{buildroot}%{_javadocdir}/%{name}-%{version} -type f -name '*.html' | %{_bindir}/xargs %{__perl} -pi -e 's/\r$//g'
-%{__rm} -rf build/%{name}%{cvs_version}/docs/apidocs
 
 # script
 %{__mkdir_p} %{buildroot}%{_bindir}
@@ -143,15 +147,6 @@ popd
 %{_bindir}/aot-compile-rpm
 %endif
 
-%post javadoc
-%{__rm} -f %{_javadocdir}/%{name}
-%{__ln_s} %{name}-%{version} %{_javadocdir}/%{name}
-
-%postun javadoc
-if [ "$1" = "0" ]; then
-  %{__rm} -f %{_javadocdir}/%{name}
-fi
-
 %clean
 %{__rm} -rf %{buildroot}
 
@@ -165,8 +160,8 @@ fi
 
 %files
 %defattr(0644,root,root,0755)
-%attr(0755,root,root) %{_bindir}/*
-%{_javadir}/*
+%attr(0755,root,root) %{_bindir}/%{name}
+%{_javadir}/*.jar
 %if %{gcj_support}
 %dir %{_libdir}/gcj/%{name}
 %attr(-,root,root) %{_libdir}/gcj/%{name}/*
@@ -178,10 +173,11 @@ fi
 
 %files manual
 %defattr(0644,root,root,0755)
+%if 0
 %doc build/%{name}%{cvs_version}/docs/*
+%endif
 
 %files javadoc
 %defattr(0644,root,root,0755)
 %{_javadocdir}/%{name}-%{version}
-
-
+%{_javadocdir}/%{name}
