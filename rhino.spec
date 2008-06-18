@@ -29,13 +29,13 @@
 #
 
 %define cvs_version 1_7R1
-%define archive_version 1_7R1-RC1
+%define archive_version 1_7R1
 %define section     free
-%define gcj_support 1
+%define gcj_support 0
 
 Name:           rhino
 Version:        1.7
-Release:        %mkrel 0.0.1
+Release:        %mkrel 0.0.2
 Epoch:          0
 Summary:        JavaScript for Java
 License:        MPL
@@ -46,8 +46,6 @@ Patch0:                http://svn.dojotoolkit.org/dojo/trunk/buildscripts/lib/cu
 Patch1:                rhino-no-xmlbeans.patch
 URL:            http://www.mozilla.org/rhino/
 Group:          Development/Java
-#Vendor:         JPackage Project
-#Distribution:   JPackage
 #Requires:       xmlbeans
 BuildRequires:  java-rpmbuild
 BuildRequires:  ant
@@ -143,9 +141,7 @@ popd
 %{__cp} -a examples/* %{buildroot}%{_datadir}/%{name}
 
 # aot compile
-%if %{gcj_support}
-%{_bindir}/aot-compile-rpm
-%endif
+%{gcj_compile}
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -162,10 +158,7 @@ popd
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_bindir}/%{name}
 %{_javadir}/*.jar
-%if %{gcj_support}
-%dir %{_libdir}/gcj/%{name}
-%attr(-,root,root) %{_libdir}/gcj/%{name}/*
-%endif
+%{gcj_files}
 
 %files demo
 %defattr(0644,root,root,0755)
