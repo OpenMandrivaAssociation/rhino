@@ -35,7 +35,7 @@
 
 Name:           rhino
 Version:        1.7
-Release:        %mkrel 0.0.6
+Release:        %mkrel 0.0.7
 Epoch:          0
 Summary:        JavaScript for Java
 License:        MPL
