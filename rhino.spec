@@ -35,7 +35,7 @@
 
 Name:           rhino
 Version:        1.7
-Release:        %mkrel 0.0.7
+Release:        8
 Epoch:          0
 Summary:        JavaScript for Java
 License:        MPL
@@ -121,14 +121,14 @@ popd
 
 # jars
 %{__mkdir_p} %{buildroot}%{_javadir}
-%{__cp} -a build/%{name}%{cvs_version}/js.jar %{buildroot}%{_javadir}/%{name}-%{version}.jar
-%{__cp} -a build/%{name}%{cvs_version}/%{name}-examples-%{version}.jar %{buildroot}%{_javadir}/%{name}-examples-%{version}.jar
+cp -a build/%{name}%{cvs_version}/js.jar %{buildroot}%{_javadir}/%{name}-%{version}.jar
+cp -a build/%{name}%{cvs_version}/%{name}-examples-%{version}.jar %{buildroot}%{_javadir}/%{name}-examples-%{version}.jar
 (cd %{buildroot}%{_javadir} && %{__ln_s} %{name}-%{version}.jar js-%{version}.jar)
 (cd %{buildroot}%{_javadir} && for jar in *-%{version}*; do %{__ln_s} ${jar} `echo $jar| %{__sed} "s|-%{version}||g"`; done)
 
 # javadoc
 %{__mkdir_p} %{buildroot}%{_javadocdir}/%{name}-%{version}
-%{__cp} -a build/%{name}%{cvs_version}/javadoc/* %{buildroot}%{_javadocdir}/%{name}-%{version}
+cp -a build/%{name}%{cvs_version}/javadoc/* %{buildroot}%{_javadocdir}/%{name}-%{version}
 %{__ln_s} %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
 %{_bindir}/find %{buildroot}%{_javadocdir}/%{name}-%{version} -type f -name '*.html' | %{_bindir}/xargs %{__perl} -pi -e 's/\r$//g'
 
@@ -138,13 +138,10 @@ popd
 
 # examples
 %{__mkdir_p} %{buildroot}%{_datadir}/%{name}
-%{__cp} -a examples/* %{buildroot}%{_datadir}/%{name}
+cp -a examples/* %{buildroot}%{_datadir}/%{name}
 
 # aot compile
 %{gcj_compile}
-
-%clean
-%{__rm} -rf %{buildroot}
 
 %if %{gcj_support}
 %post
@@ -174,3 +171,90 @@ popd
 %defattr(0644,root,root,0755)
 %{_javadocdir}/%{name}-%{version}
 %{_javadocdir}/%{name}
+
+
+%changelog
+* Thu May 05 2011 Oden Eriksson <oeriksson@mandriva.com> 0:1.7-0.0.7mdv2011.0
++ Revision: 669424
+- mass rebuild
+
+* Fri Dec 03 2010 Oden Eriksson <oeriksson@mandriva.com> 0:1.7-0.0.6mdv2011.0
++ Revision: 607365
+- rebuild
+
+* Wed Mar 17 2010 Oden Eriksson <oeriksson@mandriva.com> 0:1.7-0.0.5mdv2010.1
++ Revision: 523921
+- rebuilt for 2010.1
+
+* Thu Sep 03 2009 Christophe Fergeau <cfergeau@mandriva.com> 0:1.7-0.0.4mdv2010.0
++ Revision: 426914
+- rebuild
+
+* Sat Mar 07 2009 Antoine Ginies <aginies@mandriva.com> 0:1.7-0.0.3mdv2009.1
++ Revision: 351560
+- rebuild
+
+* Wed Jun 18 2008 Alexander Kurtakov <akurtakov@mandriva.org> 0:1.7-0.0.2mdv2009.0
++ Revision: 225399
+- switch to the 1.7 release, disable gcj_compile
+
+* Sat Jan 12 2008 David Walluck <walluck@mandriva.org> 0:1.7-0.0.1mdv2008.1
++ Revision: 149258
+- 1_7R1-RC1
+
+  + Olivier Blin <oblin@mandriva.com>
+    - restore BuildRoot
+
+  + Thierry Vignaud <tv@mandriva.org>
+    - kill re-definition of %%buildroot on Pixel's request
+
+* Sun Dec 16 2007 Anssi Hannula <anssi@mandriva.org> 0:1.6-0.r5.5mdv2008.1
++ Revision: 120815
+- buildrequires java-rpmbuild
+
+* Sat Sep 15 2007 Anssi Hannula <anssi@mandriva.org> 0:1.6-0.r5.4mdv2008.0
++ Revision: 87352
+- rebuild to filter out autorequires of GCJ AOT objects
+- remove unnecessary Requires(post) on java-gcj-compat
+
+* Sat Sep 08 2007 Pascal Terjan <pterjan@mandriva.org> 0:1.6-0.r5.3mdv2008.0
++ Revision: 82690
+- update to new version
+
+
+* Mon Mar 12 2007 David Walluck <walluck@mandriva.org> 0:1.6-0.r5.2mdv2007.1
++ Revision: 141810
+- fix gcj_support
+- spec cleanup
+
+* Mon Dec 11 2006 David Walluck <walluck@mandriva.org> 0:1.6-0.r5.1mdv2007.1
++ Revision: 95055
+- 1.6.0R5
+  fix eol for javadoc
+- Import rhino
+
+* Thu Jun 15 2006 David Walluck <walluck@mandriva.org> 0:1.6-0.r2.2.1mdv2007.0
+- bunmp release
+- still no E4X implementation (xmlbeans) or bea-stax-api
+
+* Fri Jun 02 2006 David Walluck <walluck@mandriva.org> 0:1.6-0.r2.1.1mdv2007.0
+- release
+
+* Thu Jun 01 2006 Fernando Nasser <fnasser@redhat.com> 0:1.6-0.r2.1jpp
+- Upgrade to RC2
+
+* Tue Apr 25 2006 Fernando Nasser <fnasser@redhat.com> 0:1.6-0.r1.2jpp
+- First JPP 1.7 build
+
+* Thu Dec 02 2004 David Walluck <david@jpackage.org> 0:1.6-0.r1.1jpp
+- 1_6R1
+- add demo subpackage containing example code
+- add jpp release info to implementation version
+- add script to launch js shell
+- build E4X implementation (Requires: xmlbeans)
+- remove `Class-Path' from manifest
+
+* Wed Aug 25 2004 Fernando Nasser <fnasser@redhat.com> - 0:1.5-1.R5.1jpp
+- Update to 1.5R5.
+- Rebuild with Ant 1.6.2
+
