@@ -31,6 +31,10 @@
 
 %define scm_version 1_7R4
 
+%if 0%{?fedora}
+%else
+Epoch:          1
+%endif
 Name:           rhino
 # R3 doesn't mean a prerelease, but behind R there is a version of this implementation
 # of Javascript version 1.7 (which is independent from this particular implementation,
