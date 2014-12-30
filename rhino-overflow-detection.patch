@@ -1,0 +1,41 @@
+From 52e25f784cd1b927d44383aa9afb358191df97e4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andr=C3=A9=20Bargull?= <andre.bargull@gmail.com>
+Date: Mon, 30 Jul 2012 18:25:15 +0200
+Subject: [PATCH] Add missing overflow detection when processing RegExp
+ character class pattern
+
+---
+ src/org/mozilla/javascript/regexp/NativeRegExp.java | 4 +++-
+ testsrc/doctests/regexp.class-overflow.doctest      | 6 ++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+ create mode 100755 testsrc/doctests/regexp.class-overflow.doctest
+
+--- a/src/org/mozilla/javascript/regexp/NativeRegExp.java
++++ b/src/org/mozilla/javascript/regexp/NativeRegExp.java
+@@ -1671,7 +1671,7 @@ public class NativeRegExp extends IdScri
+             if (inRange) {
+                 if ((gData.regexp.flags & JSREG_FOLD) != 0) {
+                     assert(rangeStart <= thisCh);
+-                    for (c = rangeStart; c <= thisCh; c++) {
++                    for (c = rangeStart; c <= thisCh;) {
+                         addCharacterToCharSet(charSet, c);
+                         char uch = upcase(c);
+                         char dch = downcase(c);
+@@ -1679,6 +1679,8 @@ public class NativeRegExp extends IdScri
+                             addCharacterToCharSet(charSet, uch);
+                         if (c != dch)
+                             addCharacterToCharSet(charSet, dch);
++                        if (++c == 0)
++                            break; // overflow
+                     }
+                 } else {
+                     addCharacterRangeToCharSet(charSet, rangeStart, thisCh);
+--- /dev/null
++++ b/testsrc/doctests/regexp.class-overflow.doctest
+@@ -0,0 +1,6 @@
++// This Source Code Form is subject to the terms of the Mozilla Public
++// License, v. 2.0. If a copy of the MPL was not distributed with this
++// file, You can obtain one at http://mozilla.org/MPL/2.0/.
++
++js> /[\u0000-\uFFFF]/i.test(0)
++true

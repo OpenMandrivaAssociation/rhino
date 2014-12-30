@@ -30,19 +30,16 @@
 #
 
 %define scm_version 1_7R4
-
-%if 0%{?fedora}
-%else
 Epoch:          1
-%endif
+
 Name:           rhino
 # R3 doesn't mean a prerelease, but behind R there is a version of this implementation
 # of Javascript version 1.7 (which is independent from this particular implementation,
 # e.g., there is C++ implementation in Spidermonkey)
 Version:        1.7R4
-Release:        6.1%{?dist}
+Release:        10.1
 Summary:        JavaScript for Java
-License:        MPLv2.0 
+License:        MPLv2.0
 
 Source0:        https://github.com/mozilla/rhino/archive/Rhino%{scm_version}_RELEASE.zip
 Source1:        http://repo1.maven.org/maven2/org/mozilla/rhino/%{version}/rhino-%{version}.pom
@@ -53,16 +50,20 @@ Patch0:         %{name}-build.patch
 # Rip out of MANIFEST.MF included in this JAR:
 # http://www.eclipse.org/downloads/download.php?r=1&file=/tools/orbit/downloads/drops/R20110523182458/repository/plugins/org.mozilla.javascript_1.7.2.v201005080400.jar
 Patch1:         %{name}-addOrbitManifest.patch
-Patch2:         %{name}-1.7R3-crosslink.patch
-Patch3:         %{name}-shell-manpage.patch
+Patch2:         %{name}-shell-manpage.patch
+# Originally from https://github.com/mozilla/rhino/commit\
+#    /52e25f784cd1b927d44383aa9afb358191df97e4.patch
+# See RHBZ# 1011947
+Patch3:         %{name}-overflow-detection.patch
 
 URL:            http://www.mozilla.org/rhino/
-
+Group:          Development/Java
 
 BuildRequires:  ant
 BuildRequires:  java-devel >= 1:1.6.0.0
 Requires:       jpackage-utils
 Requires:       jline
+Obsoletes:      %{name}-javadoc < %{version}-%{release}
 
 # Disable xmlbeans until we can get it into Fedora
 #Requires:       xmlbeans
@@ -76,7 +77,7 @@ scripting to end users.
 
 %package        demo
 Summary:        Examples for %{name}
-
+Group:          Development/Java
 
 %description    demo
 Examples for %{name}.
@@ -84,26 +85,17 @@ Examples for %{name}.
 %package        manual
 
 Summary:        Manual for %{name}
-
+Group:          Development/Java
 
 %description    manual
 Documentation for %{name}.
-
-%package        javadoc
-Summary:        Javadoc for %{name}
-
-BuildRequires:  java-javadoc
-Requires:       java-javadoc
-
-%description    javadoc
-Javadoc for %{name}.
 
 %prep
 %setup -q -n %{name}-Rhino%{scm_version}_RELEASE
 %patch0 -p1 -b .build
 %patch1 -p1 -b .fixManifest
-%patch2 -p1 -b .crosslink
-%patch3 -p1 -b .manpage
+%patch2 -p1 -b .manpage
+%patch3 -p1 -b .overflow
 
 # Fix build
 sed -i -e '/.*<get.*src=.*>$/d' build.xml testsrc/build.xml \
@@ -116,7 +108,7 @@ sed -i -e '/^Class-Path:.*$/d' src/manifest
 sed -i -e 's|^implementation.version: Rhino .* release .* \${implementation.date}|implementation.version: Rhino %{version} release %{release} \${implementation.date}|' build.properties
 
 %build
-ant deepclean jar copy-all javadoc -Dno-xmlbeans=1
+ant deepclean jar copy-all -Dno-xmlbeans=1
 
 pushd examples
 
@@ -132,14 +124,10 @@ cp -a build/%{name}%{scm_version}/js.jar %{buildroot}%{_javadir}
 ln -s js.jar %{buildroot}%{_javadir}/%{name}.jar
 cp -a build/%{name}%{scm_version}/%{name}-examples.jar %{buildroot}%{_javadir}/%{name}-examples.jar
 
-# javadoc
-mkdir -p %{buildroot}%{_javadocdir}/%{name}
-cp -a build/%{name}%{scm_version}/javadoc/* %{buildroot}%{_javadocdir}/%{name}
-
 # man page
 mkdir -p %{buildroot}%{_mandir}/man1/
 install -m 644 build/%{name}%{scm_version}/man/%{name}.1 %{buildroot}%{_mandir}/man1/%{name}.1
- 
+
 ## script
 mkdir -p %{buildroot}%{_bindir}
 install -m 755 %{SOURCE2} %{buildroot}%{_bindir}/%{name}
@@ -154,12 +142,11 @@ install -d -m 755 $RPM_BUILD_ROOT%{_mavenpomdir}
 install -p -m 644 %{SOURCE1} $RPM_BUILD_ROOT%{_mavenpomdir}/JPP-%{name}.pom
 %add_maven_depmap JPP-%{name}.pom %{name}.jar -a "rhino:js"
 
-%files
+%files -f .mfiles
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_bindir}/*
 %{_javadir}/*
 %{_mavenpomdir}/JPP-%{name}.pom
-%{_mavendepmapfragdir}/%{name}
 %{_mandir}/man1/%{name}.1*
 
 %files demo
@@ -170,10 +157,20 @@ install -p -m 644 %{SOURCE1} $RPM_BUILD_ROOT%{_mavenpomdir}/JPP-%{name}.pom
 %doc build/%{name}%{scm_version}/docs/*
 %endif
 
-%files javadoc
-%doc %{_javadocdir}/%{name}
-
 %changelog
+* Tue Jun 10 2014 Alexander Kurtakov <akurtako@redhat.com> 1.7R4-10
+- No longer ship javadoc subpackage and obsolete it.
+
+* Tue Jun 10 2014 Alexander Kurtakov <akurtako@redhat.com> 1.7R4-9
+- Use mfiles.
+
+* Sun Jun 08 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.7R4-8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
+* Tue Jan 14 2014 Matěj Cepl <mcepl@redhat.com> - 1.7R4-7
+- Add overlow detection patch from the upstream (RHBZ# 1011947)
+- Update all patches.
+
 * Mon Sep 09 2013 Elliott Baron <ebaron@redhat.com> 1.7R4-6
 - Update and add missing options for Rhino shell man page.
 
@@ -339,3 +336,4 @@ install -p -m 644 %{SOURCE1} $RPM_BUILD_ROOT%{_mavenpomdir}/JPP-%{name}.pom
 
 * Fri Aug 31 2001 Guillaume Rousse <guillomovitch@users.sourceforge.net> 1.5R2-1mdk
 - first Mandrake release
+
