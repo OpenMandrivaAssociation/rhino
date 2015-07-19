@@ -37,7 +37,7 @@ Name:           rhino
 # of Javascript version 1.7 (which is independent from this particular implementation,
 # e.g., there is C++ implementation in Spidermonkey)
 Version:        1.7R4
-Release:        10.1
+Release:        10.2
 Summary:        JavaScript for Java
 License:        MPLv2.0
 
