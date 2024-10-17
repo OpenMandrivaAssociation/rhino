@@ -56,7 +56,7 @@ Patch2:         %{name}-shell-manpage.patch
 # See RHBZ# 1011947
 Patch3:         %{name}-overflow-detection.patch
 
-URL:            http://www.mozilla.org/rhino/
+URL:            https://www.mozilla.org/rhino/
 Group:          Development/Java
 
 BuildRequires:  ant
