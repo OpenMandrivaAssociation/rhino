@@ -29,32 +29,30 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-%define scm_version 1_7R4
+# Upstream tag is Rhino1_9_1_Release (directory: rhino-Rhino1_9_1_Release)
+%define scm_version 1_9_1
 Epoch:          1
 
 Name:           rhino
-# R3 doesn't mean a prerelease, but behind R there is a version of this implementation
-# of Javascript version 1.7 (which is independent from this particular implementation,
-# e.g., there is C++ implementation in Spidermonkey)
-Version:        1.7R4
-Release:        10.4
+Version:        1.9.1
+Release:        1
 Summary:        JavaScript for Java
 License:        MPLv2.0
 
-Source0:        https://github.com/mozilla/rhino/archive/Rhino%{scm_version}_RELEASE.zip
+Source0:        https://github.com/mozilla/rhino/archive/Rhino%{scm_version}_Release.zip
 Source1:        http://repo1.maven.org/maven2/org/mozilla/rhino/%{version}/rhino-%{version}.pom
 Source2:        %{name}.script
 
-Patch0:         %{name}-build.patch
+Patch0:         rhino-build.patch
 # Add OSGi metadata from Eclipse Orbit project
 # Rip out of MANIFEST.MF included in this JAR:
 # http://www.eclipse.org/downloads/download.php?r=1&file=/tools/orbit/downloads/drops/R20110523182458/repository/plugins/org.mozilla.javascript_1.7.2.v201005080400.jar
-Patch1:         %{name}-addOrbitManifest.patch
-Patch2:         %{name}-shell-manpage.patch
+Patch1:         rhino-addOrbitManifest.patch
+Patch2:         rhino-shell-manpage.patch
 # Originally from https://github.com/mozilla/rhino/commit\
 #    /52e25f784cd1b927d44383aa9afb358191df97e4.patch
 # See RHBZ# 1011947
-Patch3:         %{name}-overflow-detection.patch
+Patch3:         rhino-overflow-detection.patch
 
 URL:            https://www.mozilla.org/rhino/
 Group:          Development/Java
@@ -91,21 +89,11 @@ Group:          Development/Java
 Documentation for %{name}.
 
 %prep
-%setup -q -n %{name}-Rhino%{scm_version}_RELEASE
-%patch0 -p1 -b .build
-%patch1 -p1 -b .fixManifest
-%patch2 -p1 -b .manpage
-%patch3 -p1 -b .overflow
-
-# Fix build
-sed -i -e '/.*<get.*src=.*>$/d' build.xml testsrc/build.xml \
-       toolsrc/org/mozilla/javascript/tools/debugger/build.xml xmlimplsrc/build.xml
-
-# Fix manifest
-sed -i -e '/^Class-Path:.*$/d' src/manifest
-
-# Add jpp release info to version
-sed -i -e 's|^implementation.version: Rhino .* release .* \${implementation.date}|implementation.version: Rhino %{version} release %{release} \${implementation.date}|' build.properties
+%setup -q -n %{name}-Rhino%{scm_version}_Release
+%patch -P0 -p1 -b .build
+%patch -P1 -p1 -b .fixManifest
+%patch -P2 -p1 -b .manpage
+%patch -P3 -p1 -b .overflow
 
 %build
 ant deepclean jar copy-all -Dno-xmlbeans=1
